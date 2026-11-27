@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<title>明鎰漆料行 - 出廠證明填表小幫手</title>
+<style>
+  body { font-family: "Microsoft JhengHei", "微軟正黑體", sans-serif; background: #e9ecef; margin: 0; padding: 15px; color: #111; font-size: 20px; }
+  .container { display: flex; gap: 20px; max-width: 1550px; margin: 0 auto; }
+  .left-panel { width: 40%; background: #fff; padding: 22px; border-radius: 12px; box-shadow: 0 3px 10px rgba(0,0,0,0.12); height: fit-content; }
+  .right-panel { width: 60%; }
+  .step-title { background: #1a73e8; color: #fff; padding: 8px 14px; border-radius: 8px; font-size: 21px; font-weight: bold; margin: 18px 0 8px; display: block; }
+  .step-title.gray { background: #5f6368; margin-top: 0; font-size: 18px; }
+  input[type="text"], input[type="password"], textarea, select { width: 100%; box-sizing: border-box; padding: 12px; border: 2px solid #888; border-radius: 8px; font-size: 20px; font-family: inherit; }
+  textarea { height: 140px; line-height: 1.4; }
+  .drop-zone { border: 3px dashed #1a73e8; background: #f0f7ff; padding: 16px; text-align: center; border-radius: 10px; }
+  .preview-imgs { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
+  .preview-imgs img { max-height: 110px; border: 2px solid #333; border-radius: 6px; cursor: zoom-in; }
+  .btn-big { background: #0b57d0; color: #fff; border: none; padding: 18px; font-size: 24px; font-weight: bold; border-radius: 10px; cursor: pointer; width: 100%; margin-top: 18px; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
+  .btn-big:hover { background: #0842a0; }
+  .btn-big:disabled { background: #888; }
+  .btn-print { background: #137333; color: #fff; border: none; padding: 16px 24px; font-size: 24px; font-weight: bold; border-radius: 10px; cursor: pointer; width: 100%; margin-bottom: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
+  .btn-print:hover { background: #0d5224; }
+  .check-box { padding: 16px 20px; border-radius: 10px; margin-bottom: 15px; font-size: 20px; line-height: 1.5; border: 3px solid transparent; display: none; }
+  .check-pass { background: #dcfce7; border-color: #16a34a; color: #14532d; }
+  .check-warn { background: #fee2e2; border-color: #dc2626; color: #7f1d1d; }
+  .tabs { display: flex; gap: 10px; margin-bottom: 15px; }
+  .tab { flex: 1; text-align: center; padding: 15px 10px; background: #d2d6dc; border-radius: 10px; cursor: pointer; font-weight: bold; font-size: 21px; border: 2px solid transparent; }
+  .tab.active { background: #1a73e8; color: #fff; border-color: #0842a0; }
+  .toolbar { background: #fff; padding: 15px; border-radius: 10px; margin-bottom: 15px; border: 2px solid #ccc; }
+  .paper { background: #fff; width: 210mm; min-height: 290mm; padding: 14mm 16mm; box-sizing: border-box; box-shadow: 0 2px 10px rgba(0,0,0,0.15); margin: 0 auto; font-size: 16px; line-height: 1.6; color: #000; }
+  .edit-field { border: none; border-bottom: 2px dashed #1a73e8; background: #eef6ff; font-family: inherit; font-size: 16px; color: #000; padding: 2px 5px; font-weight: bold; }
+  .edit-field:focus { outline: none; background: #fff3cd; }
+  .manual-field { border: 2px solid #d97706; background: #fef08a; padding: 4px 8px; border-radius: 5px; font-size: 16px; font-weight: bold; color: #000; }
+  .checkbox-toggle { cursor: pointer; user-select: none; font-weight: bold; font-size: 19px; padding: 2px 4px; background: #eef6ff; border-radius: 4px; }
+  table.form-table { width: 100%; border-collapse: collapse; margin: 12px 0; }
+  table.form-table th, table.form-table td { border: 1px solid #000; padding: 8px; text-align: center; }
+  .row-btn { background: #e2e8f0; border: 1px solid #64748b; cursor: pointer; padding: 6px 12px; font-size: 16px; font-weight: bold; border-radius: 5px; }
+  .row-btn.del { color: #dc2626; background: #fee2e2; }
+  #imgModal { display: none; position: fixed; top:0; left:0; width:45%; height:100%; background: rgba(0,0,0,0.9); z-index: 999; flex-direction: column; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; }
+  #imgModal img { max-width: 100%; max-height: 85%; border: 3px solid #fff; }
+  @media print {
+    body { background: #fff; padding: 0; }
+    .left-panel, .tabs, .toolbar, .btn-print, .check-box, .no-print, #imgModal { display: none !important; }
+    .right-panel { width: 100%; }
+    .paper { box-shadow: none; width: 100%; padding: 5mm 10mm; margin: 0; }
+    .edit-field, .manual-field, .checkbox-toggle { border: none !important; background: transparent !important; padding: 0; }
+    input::placeholder { color: transparent; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="left-panel">
+    <div class="step-title gray">🔑 系統通行密碼 (貼一次就好，會自動記住)</div>
+    <input type="password" id="apiKey" placeholder="把通行密碼貼在這裡" onchange="localStorage.setItem('gemini_key', this.value)">
+    <div class="step-title">【第 1 步】把客人的 LINE 文字貼在下面</div>
+    <textarea id="rawText" placeholder="滑鼠點這裡，按右鍵選「貼上」..."></textarea>
+    <div class="step-title">【第 2 步】放照片 (門牌照、手寫單)</div>
+    <div id="dropZone" class="drop-zone">
+      <input type="file" id="fileInput" accept="image/*" multiple style="font-size:18px; width:100%; cursor:pointer;" onchange="handleFiles(this.files)">
+      <div style="font-size:17px; color:#333; margin-top:8px;">👆 點上方「選擇檔案」選照片，或直接把照片拖進來 / 按 <b>Ctrl + V</b> 貼上</div>
+    </div>
+    <div class="preview-imgs" id="imgPreviewContainer"></div>
+    <button type="button" class="row-btn" style="margin-top:8px;" onclick="clearImages()">🗑️ 清除照片</button>
+    <button class="btn-big" id="analyzeBtn" onclick="analyzeData()">✨【第 3 步】幫我整理資料＋核對</button>
+    <div id="statusMsg" style="margin-top:12px; font-size:20px; color:#d97706; font-weight:bold; text-align:center;"></div>
+  </div>
+  <div class="right-panel">
+    <button class="btn-print" onclick="window.print()">🖨️【第 4 步】確認沒問題，點這裡印出來</button>
+    <div id="checkReport" class="check-box"></div>
+    <div class="tabs">
+      <div class="tab active" onclick="switchBrand('dulux')" id="tab-dulux">1. 得利申請書</div>
+      <div class="tab" onclick="switchBrand('qingye')" id="tab-qingye">2. 青葉申請單</div>
+      <div class="tab" onclick="switchBrand('rainbow')" id="tab-rainbow">3. 虹牌切結書</div>
+    </div>
+    <div class="toolbar">
+      <div style="margin-bottom:12px; padding-bottom:10px; border-bottom:1px solid #ddd;">
+        <b>🔄 猜錯廠牌？點這裡把整張資料搬家：</b>
+        <div style="display:flex; gap:8px; margin-top:6px;">
+          <button type="button" class="row-btn" style="background:#dbeafe; border-color:#1a73e8;" onclick="moveAllToBrand('dulux')">👉 全部搬去【得利】</button>
+          <button type="button" class="row-btn" style="background:#dcfce7; border-color:#16a34a;" onclick="moveAllToBrand('qingye')">👉 全部搬去【青葉】</button>
+          <button type="button" class="row-btn" style="background:#fef3c7; border-color:#d97706;" onclick="moveAllToBrand('rainbow')">👉 全部搬去【虹牌】</button>
+        </div>
+      </div>
+      <div style="margin-bottom:10px;">
+        <b>📍 如果有 2 個地址，點這裡切換：</b>
+        <select id="addrSelect" style="margin-top:5px;" onchange="applySelectedAddress()">
+          <option value="">(整理好之後會出現在這裡)</option>
+        </select>
+      </div>
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+        <label style="cursor:pointer; font-weight:bold;">
+          <input type="checkbox" id="autoDealer" checked style="width:20px; height:20px;" onchange="toggleDealer()"> 自動填「明鎰漆料行」
+        </label>
+        <span style="background:#fef08a; padding:4px 8px; border-radius:5px; font-size:17px;">💡 <b>黃色格子</b>請自己打字填寫</span>
+      </div>
+    </div>
+    <div class="paper" id="form-dulux">
+      <div style="text-align:center; font-size:22px; font-weight:bold;">
+        出廠證明/ 購買證明申請書　開立份數：<input class="edit-field" id="d-copies" style="width:35px; text-align:center;" value="3"> 份
+      </div>
+      <p style="margin-top:18px;">
+        <b>本經銷商</b> <input class="edit-field dealer-name" style="width:180px; text-align:center;" value="明鎰漆料行"> 係台灣阿克蘇諾貝爾塗料(股)公司(以下簡稱 AN)之經銷商。
+      </p>
+      <p>本經銷商茲聲明以下單位，已向本經銷商洽購以下貨品專供應個案使用無誤，該等貨品已送指定地點簽名點收。</p>
+      <p><b>施工單位：</b><input class="edit-field" id="d-contractor" style="width:75%;"></p>
+      <p><b>工程名稱：</b><input class="edit-field" id="d-project" style="width:75%;"></p>
+      <p><b>工程地址：</b><input class="edit-field addr-target" id="d-address" style="width:75%;"></p>
+      <table class="form-table">
+        <thead>
+          <tr><th>產品</th><th>顏色</th><th>數量</th><th class="no-print" style="width:65px;">刪除</th></tr>
+        </thead>
+        <tbody id="d-items"></tbody>
+      </table>
+      <button class="row-btn no-print" onclick="addDuluxRow()">+ 多加一行產品</button>
+      <p style="margin-top:15px;">
+        <b>收件人(全名)</b> <input class="edit-field" id="d-recipient" style="width:55%;"> <b>到店</b><br>
+        <b>郵遞區號：</b><input class="edit-field" id="d-zip" style="width:100px;">
+      </p>
+      <p><b>證明日期：</b><input class="manual-field" placeholder="點此輸入日期"></p>
+      <p style="font-size:13px;">若發生業主(產品使用客戶)有任何與本證明有關的產品及使用數量不符的疑慮，概由本經銷商負完全的法律責任。本經銷商聲明以上資料均據實填寫絕無虛構。</p>
+      <p style="font-size:17px; font-weight:bold; margin:20px 0;">※申請人(經銷商負責人)簽章：</p>
+      <p><b>申請日期：</b><input class="manual-field" placeholder="點此輸入日期"></p>
+      <div style="font-size:13px; margin-bottom:12px;">
+        附註：<br>
+        1. 本申請書上不載明與出廠貨品無關之資料。業主如有需要產品塗佈量等數據，請註明需提供產品技術資料。<br>
+        2. 請務必將各項資料填寫完整以免延誤遞送時間
+      </div>
+      <table style="width:260px; border-collapse:collapse; font-size:14px;">
+        <tr><td style="border:1px solid #000; padding:4px;">客戶：<input class="manual-field" style="width:130px;" placeholder="輸入客編"></td></tr>
+        <tr><td style="border:1px solid #000; padding:4px;">廠商：<input class="manual-field" style="width:130px;" placeholder="輸入廠商碼"></td></tr>
+        <tr><td style="border:1px solid #000; padding:4px;">申請日期：<input class="manual-field" style="width:110px;" placeholder="輸入日期"></td></tr>
+        <tr><td style="border:1px solid #000; padding:4px;">寄出日期：<input class="manual-field" style="width:110px;"></td></tr>
+        <tr><td style="border:1px solid #000; padding:4px;">完成日期：<input class="manual-field" style="width:110px;"></td></tr>
+      </table>
+    </div>
+    <div class="paper" id="form-qingye" style="display:none;">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+        <div style="width:62%; text-align:center; padding-top:15px;">
+          <div style="font-size:24px; font-weight:bold; letter-spacing:6px;">
+            <input class="edit-field dealer-name" style="font-size:24px; font-weight:bold; text-align:center; width:220px;" value="明鎰漆料行">
+          </div>
+          <div style="font-size:16px; margin-top:5px;">綠建材/出廠證明申請單</div>
+        </div>
+        <table style="width:38%; border-collapse:collapse; font-size:14px;">
+          <tr><td style="border:1px solid #000; padding:4px;">申請日期：<input class="manual-field" style="width:110px;" placeholder="輸入日期"></td></tr>
+          <tr><td style="border:1px solid #000; padding:4px;">傳真日期：<input class="manual-field" style="width:110px;"></td></tr>
+          <tr><td style="border:1px solid #000; padding:4px;">完成日期：<input class="manual-field" style="width:110px;"></td></tr>
+          <tr><td style="border:1px solid #000; padding:4px;">客編：<input class="manual-field" style="width:120px;" placeholder="輸入客編"></td></tr>
+          <tr><td style="border:1px solid #000; padding:4px;">廠商：<input class="manual-field" style="width:120px;" placeholder="輸入廠商碼"></td></tr>
+        </table>
+      </div>
+      <table style="width:100%; border-collapse:collapse; margin-top:10px;">
+        <tr><td style="border-bottom:1px solid #000; padding:8px 0;"><b>收 件 者：</b>青葉油漆</td></tr>
+        <tr><td style="border-bottom:1px solid #000; padding:8px 0;"><span class="checkbox-toggle" onclick="toggleCheck(this)">☑</span> 綠建材證明　（ 1 式 <input class="edit-field" id="q-copies1" style="width:30px; text-align:center;" value="3"> 份）</td></tr>
+        <tr><td style="border-bottom:1px solid #000; padding:8px 0;"><span class="checkbox-toggle" onclick="toggleCheck(this)">☑</span> 出廠證明　　（ 1 式 <input class="edit-field" id="q-copies2" style="width:30px; text-align:center;" value="3"> 份）</td></tr>
+        <tr><td style="border-bottom:1px solid #000; padding:8px 0;"><b>業　　主：</b><input class="edit-field" style="width:78%;"></td></tr>
+        <tr><td style="border-bottom:1px solid #000; padding:8px 0;"><b>工程名稱：</b><input class="edit-field" id="q-project" style="width:78%;"></td></tr>
+        <tr><td style="border-bottom:1px solid #000; padding:8px 0;">• <b>工程地址：</b><input class="edit-field addr-target" id="q-address" style="width:78%;"></td></tr>
+        <tr><td style="border-bottom:1px solid #000; padding:8px 0;"><b>施工單位：</b><input class="edit-field" id="q-contractor" style="width:78%;"></td></tr>
+        <tr><td style="border-bottom:1px solid #000; padding:8px 0;">
+          <b>產品名稱：</b><br>
+          <div id="q-items" style="margin-top:5px;"></div>
+          <button class="row-btn no-print" style="margin-top:5px;" onclick="addQingyeRow()">+ 多加一行產品</button>
+        </td></tr>
+        <tr><td style="border-bottom:1px solid #000; padding:8px 0;"><b>數　　量：</b><input class="edit-field" style="width:70%;"></td></tr>
+        <tr><td style="border-bottom:1px solid #000; padding:8px 0;"><b>送件方式：</b><span class="checkbox-toggle" onclick="toggleCheck(this)">☑</span> 郵寄　　<span class="checkbox-toggle" onclick="toggleCheck(this)">☐</span> 到店</td></tr>
+        <tr><td style="border-bottom:1px solid #000; padding:8px 0;"><b>收件地址：</b><input class="edit-field" id="q-rec-addr" style="width:78%;"></td></tr>
+        <tr><td style="border-bottom:1px solid #000; padding:8px 0;"><b>收件單位：</b><input class="edit-field" style="width:78%;"></td></tr>
+        <tr><td style="border-bottom:1px solid #000; padding:8px 0;"><b>收件人：</b><input class="edit-field" id="q-recipient" style="width:78%;"></td></tr>
+        <tr><td style="border-bottom:1px solid #000; padding:8px 0;"><b>備　　註：</b><input class="edit-field" style="width:78%;"></td></tr>
+        <tr><td style="border-bottom:1px solid #000; padding:8px 0;"><b>證明日期：</b><input class="manual-field" placeholder="點此輸入日期"></td></tr>
+      </table>
+      <div style="margin-top:15px; font-size:14px;">
+        謝謝您的協助如有問題請與我們聯絡<br>
+        聯絡電話：02-2261-1852　　　　　傳真電話：02-22611663<br>
+        聯 絡 人：黃小姐 或 張小姐
+      </div>
+    </div>
+    <div class="paper" id="form-rainbow" style="display:none;">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px;">
+        <div style="font-size:24px; font-weight:bold;">RAINBOW 虹牌油漆</div>
+        <div style="font-size:22px; font-weight:bold;">聲請發給證明文件暨切結書</div>
+      </div>
+      <p><b>本經銷商</b> <input class="edit-field dealer-name" style="width:200px; text-align:center;" value="明鎰漆料行"> ，係永記造漆股份有限公司之經銷商。因下列附表油漆產品之</p>
+      <p><b>承包商 / 施工單位：</b><input class="edit-field" id="r-contractor" style="width:70%;"></p>
+      <p><b>承攬工程/工程名稱：</b><input class="edit-field" id="r-project" style="width:70%;"></p>
+      <p style="padding-left:60px;"><b>證明日期：</b><input class="manual-field" placeholder="點此輸入日期"></p>
+      <p><b>工程地址：</b><input class="edit-field addr-target" id="r-address" style="width:75%;"></p>
+      <p style="margin-top:15px;">
+        而有取得
+        <span class="checkbox-toggle" onclick="toggleCheck(this)">☑</span>出廠證明 
+        <span class="checkbox-toggle" onclick="toggleCheck(this)">☑</span>綠建材證明 
+        <span class="checkbox-toggle" onclick="toggleCheck(this)">☐</span>防火證明 
+        <span class="checkbox-toggle" onclick="toggleCheck(this)">☐</span>其他：<input class="edit-field" style="width:80px;">
+        之必要，今向貴公司聲發給該文書一式 <input class="edit-field" id="r-copies" style="width:35px; text-align:center;" value="3"> 份，並保證表列之 貴公司產品包括其包裝規格、顏色及數量等確係由該買受人使用於前述工程及工地無誤，如有名實未符而有侵害 貴公司權益之情事發生時，謹承諾願負擔一切法律責任並賠償 貴公司因此所受損害之全部為免口說無憑，特立此書。
+      </p>
+      <p style="margin-top:18px;"><b>郵寄地址：</b><input class="edit-field" id="r-rec-addr" style="width:75%;"></p>
+      <p><b>收件人／電話：</b><input class="edit-field" id="r-recipient" style="width:75%;"></p>
+      <table class="form-table">
+        <thead>
+          <tr><th>油漆產品名稱</th><th>顏色</th><th>包裝規格<br>(立裝/加侖/桶)</th><th>數量</th><th>備註</th><th class="no-print" style="width:65px;">刪除</th></tr>
+        </thead>
+        <tbody id="r-items"></tbody>
+      </table>
+      <button class="row-btn no-print" onclick="addRainbowRow()">+ 多加一行產品</button>
+      <div style="font-size:13px; margin-top:15px;">
+        註一、產品為彩虹屋調色者，應註明BASE品號。<br>
+        註二、申請綠建材證明者，應記明工程名稱及其工程地址。
+      </div>
+      <div style="display:flex; justify-content:space-between; margin-top:45px; font-weight:bold;">
+        <div>聲請暨立切結書人（簽章）：</div>
+        <div>申請日期：<input class="manual-field" placeholder="點此輸入日期"></div>
+      </div>
+    </div>
+  </div>
+</div>
+<div id="imgModal" onclick="this.style.display='none'">
+  <img id="modalImg" src="">
+  <div style="color:#fff; font-size:20px; margin-top:10px; font-weight:bold;">👆 點一下照片任何地方即可關閉放大</div>
+</div>
+<script>
+var lastExtractedItems = [];
+var uploadedImages = [];
+
+window.onload = function() {
+  var savedKey = localStorage.getItem('gemini_key');
+  if (savedKey) document.getElementById('apiKey').value = savedKey;
+  if (document.getElementById('d-items').children.length === 0) addDuluxRow();
+  if (document.getElementById('q-items').children.length === 0) addQingyeRow();
+  if (document.getElementById('r-items').children.length === 0) addRainbowRow();
+  var dz = document.getElementById('dropZone');
+  if (dz) {
+    dz.ondragover = function(e) { e.preventDefault(); dz.style.background = '#dcebff'; };
+    dz.ondragleave = function() { dz.style.background = '#f0f7ff'; };
+    dz.ondrop = function(e) {
+      e.preventDefault();
+      dz.style.background = '#f0f7ff';
+      if (e.dataTransfer && e.dataTransfer.files.length > 0) handleFiles(e.dataTransfer.files);
+    };
+  }
+};
+
+document.addEventListener('paste', function(e) {
+  if (!e.clipboardData || !e.clipboardData.items) return;
+  var items = e.clipboardData.items;
+  var files = [];
+  for (var i = 0; i < items.length; i++) {
+    if (items[i].type && items[i].type.indexOf('image') !== -1) {
+      var f = items[i].getAsFile();
+      if (f) files.push(f);
+    }
+  }
+  if (files.length > 0) handleFiles(files);
+});
+
+function handleFiles(files) {
+  var container = document.getElementById('imgPreviewContainer');
+  for (var i = 0; i < files.length; i++) {
+    (function(file) {
+      var reader = new FileReader();
+      reader.onload = function(e) {
+        var dataUrl = e.target.result;
+        var commaPos = dataUrl.indexOf(',');
+        var base64 = dataUrl.substring(commaPos + 1);
+        uploadedImages.push({ mimeType: file.type || 'image/png', data: base64 });
+        var img = document.createElement('img');
+        img.src = dataUrl;
+        img.title = "點一下放大與右邊對照";
+        img.onclick = function() {
+          document.getElementById('modalImg').src = dataUrl;
+          document.getElementById('imgModal').style.display = 'flex';
+        };
+        container.appendChild(img);
+      };
+      reader.readAsDataURL(file);
+    })(files[i]);
+  }
+}
+
+function clearImages() {
+  uploadedImages = [];
+  document.getElementById('imgPreviewContainer').innerHTML = '';
+  document.getElementById('fileInput').value = '';
+}
+
+function switchBrand(brand) {
+  var brands = ['dulux', 'qingye', 'rainbow'];
+  for (var i = 0; i < brands.length; i++) {
+    var b = brands[i];
+    document.getElementById('form-' + b).style.display = (b === brand) ? 'block' : 'none';
+    document.getElementById('tab-' + b).classList.toggle('active', b === brand);
+  }
+}
+
+function moveAllToBrand(targetBrand) {
+  if (!lastExtractedItems || lastExtractedItems.length === 0) {
+    alert('請先按【第 3 步】整理資料後，再使用一鍵搬家喔！');
+    return;
+  }
+  document.getElementById('d-items').innerHTML = '';
+  document.getElementById('q-items').innerHTML = '';
+  document.getElementById('r-items').innerHTML = '';
+  var cnt = lastExtractedItems.length;
+  for (var i = 0; i < cnt; i++) {
+    var item = lastExtractedItems[i];
+    if (targetBrand === 'dulux') {
+      addDuluxRow(item.product, item.color, item.qty + ' ' + (item.unit || '桶'));
+    } else if (targetBrand === 'qingye') {
+      var line = (item.product + ' ' + item.color + '*' + item.qty + ' ' + (item.unit || '桶')).replace(/\s+/g, ' ');
+      addQingyeRow(line);
+    } else if (targetBrand === 'rainbow') {
+      addRainbowRow(item.product, item.color, item.unit || '桶', item.qty);
+    }
+  }
+  if (targetBrand !== 'dulux') addDuluxRow();
+  if (targetBrand !== 'qingye') addQingyeRow();
+  if (targetBrand !== 'rainbow') addRainbowRow();
+  document.getElementById('tab-dulux').textContent = '1. 得利 (' + (targetBrand === 'dulux' ? cnt : 0) + '項)';
+  document.getElementById('tab-qingye').textContent = '2. 青葉 (' + (targetBrand === 'qingye' ? cnt : 0) + '項)';
+  document.getElementById('tab-rainbow').textContent = '3. 虹牌 (' + (targetBrand === 'rainbow' ? cnt : 0) + '項)';
+  switchBrand(targetBrand);
+}
+
+function toggleCheck(el) {
+  el.textContent = (el.textContent === '☑') ? '☐' : '☑';
+}
+
+function toggleDealer() {
+  var val = document.getElementById('autoDealer').checked ? '明鎰漆料行' : '';
+  var list = document.querySelectorAll('.dealer-name');
+  for (var i = 0; i < list.length; i++) list[i].value = val;
+}
+
+function applySelectedAddress() {
+  var val = document.getElementById('addrSelect').value;
+  if (val) {
+    var list = document.querySelectorAll('.addr-target');
+    for (var i = 0; i < list.length; i++) list[i].value = val;
+  }
+}
+
+function makeEditInput(val, widthStyle) {
+  var inp = document.createElement('input');
+  inp.className = 'edit-field';
+  inp.style.width = widthStyle || '90%';
+  inp.style.textAlign = 'center';
+  inp.value = val || '';
+  return inp;
+}
+
+function addDuluxRow(prod, color, qty) {
+  var tr = document.createElement('tr');
+  var vals = [prod, color, qty];
+  for (var i = 0; i < 3; i++) {
+    var td = document.createElement('td');
+    td.appendChild(makeEditInput(vals[i], '90%'));
+    tr.appendChild(td);
+  }
+  var tdDel = document.createElement('td');
+  tdDel.className = 'no-print';
+  var btn = document.createElement('button');
+  btn.className = 'row-btn del';
+  btn.textContent = '✕';
+  btn.onclick = function() { tr.remove(); };
+  tdDel.appendChild(btn);
+  tr.appendChild(tdDel);
+  document.getElementById('d-items').appendChild(tr);
+}
+
+function addQingyeRow(text) {
+  var div = document.createElement('div');
+  div.style.marginBottom = '6px';
+  var inp = makeEditInput(text, '85%');
+  inp.style.textAlign = 'left';
+  var btn = document.createElement('button');
+  btn.className = 'row-btn del no-print';
+  btn.textContent = '✕';
+  btn.style.marginLeft = '6px';
+  btn.onclick = function() { div.remove(); };
+  div.appendChild(inp);
+  div.appendChild(btn);
+  document.getElementById('q-items').appendChild(div);
+}
+
+function addRainbowRow(prod, color, unit, qty) {
+  var tr = document.createElement('tr');
+  var vals = [prod, color, unit || '桶', qty, ''];
+  for (var i = 0; i < 5; i++) {
+    var td = document.createElement('td');
+    td.appendChild(makeEditInput(vals[i], '90%'));
+    tr.appendChild(td);
+  }
+  var tdDel = document.createElement('td');
+  tdDel.className = 'no-print';
+  var btn = document.createElement('button');
+  btn.className = 'row-btn del';
+  btn.textContent = '✕';
+  btn.onclick = function() { tr.remove(); };
+  tdDel.appendChild(btn);
+  tr.appendChild(tdDel);
+  document.getElementById('r-items').appendChild(tr);
+}
+
+async function analyzeData() {
+  var apiKey = document.getElementById('apiKey').value.trim();
+  var rawText = document.getElementById('rawText').value.trim();
+  var status = document.getElementById('statusMsg');
+  var reportBox = document.getElementById('checkReport');
+  var btn = document.getElementById('analyzeBtn');
+  if (!apiKey) { alert('請先在最上面貼上通行密碼喔！'); return; }
+  if (!rawText && uploadedImages.length === 0) { alert('請先貼上文字或放一張照片喔！'); return; }
+  btn.disabled = true;
+  reportBox.style.display = 'none';
+  status.style.color = '#d97706';
+  status.textContent = '⏳ 小幫手正在幫您整理資料並核對，請稍等一下...';
+  var prompt = '你是台灣油漆建材行的資深行政助手，精通得利(Dulux)、青葉(Qingye)、虹牌(Rainbow)三大品牌的產品型號。請從文字與圖片中萃取出資訊，嚴格只回傳純 JSON（不要 markdown 標記）。' +
+    '【品牌自動分類核心規則（即使客人沒寫品牌名稱，也必須依型號自動歸類）】：' +
+    '1. "dulux"（得利）：文字提到得利/Dulux，或型號包含 A986、A935、935、A931、A959、A991、全效乳膠漆、竹炭、晴雨漆 等。' +
+    '2. "qingye"（青葉）：文字提到青葉，或型號包含 1000、6000、2000、銀立淨、方舟 等。' +
+    '3. "rainbow"（虹牌）：文字提到虹牌/永記，或型號包含 450、467、460、426、860、SA-、優麗漆、漏克補 等。' +
+    '若真的無法判斷品牌，預設歸類為 "dulux"，並在 warnings 提醒店員確認品牌。' +
+    '【欄位萃取規則】：' +
+    '1. project_name：只抓「純工程名稱」（可保留案號，不要包含起造人或承造人）。' +
+    '2. contractor：施工單位（或公司名）。' +
+    '3. addresses：陣列，列出所有工程地址，若圖片中有門牌照也辨識成完整地址放入陣列。' +
+    '4. postal_code：若門牌或地址可判斷出台灣3碼郵遞區號請填入，否則空字串。' +
+    '5. copies：份數數字（預設 "3"）。' +
+    '6. recipient：收件人姓名與電話。' +
+    '7. shipping_address：若有明確寄送/收件地址請填入。' +
+    '8. items：陣列，每個品項必須包含 brand ("dulux" | "qingye" | "rainbow")、product (型號如 A986)、color (顏色/色號如 百合白 或 1501)、unit (單位如 桶)、qty (純數字如 12)。' +
+    '9. verification：original_total_qty（原始總桶數純數字）、warnings（陣列，提醒店員人工確認之處，無疑問則空陣列）。' +
+    'JSON結構：{"project_name":"","contractor":"","addresses":[],"postal_code":"","copies":"3","recipient":"","shipping_address":"","items":[{"brand":"dulux","product":"","color":"","unit":"桶","qty":10}],"verification":{"original_total_qty":10,"warnings":[]}}';
+  var parts = [{ text: prompt + "\n\n使用者輸入文字：\n" + rawText }];
+  for (var i = 0; i < uploadedImages.length; i++) {
+    parts.push({ inline_data: { mime_type: uploadedImages[i].mimeType, data: uploadedImages[i].data } });
+  }
+  try {
+    var apiUrl = 'https://googleapis.com' + apiKey;
+    var response = await fetch(apiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contents: [{ parts: parts }] })
+    });
+    var result = await response.json();
+    if (result.error) throw new Error(result.error.message);
+    var textOut = result.candidates.shift().content.parts.shift().text;
+    textOut = textOut.replace(/```json/g, '').replace(/```/g, '').trim();
+    var data = JSON.parse(textOut);
+    document.getElementById('d-contractor').value = data.contractor || '';
+    document.getElementById('q-contractor').value = data.contractor || '';
+    document.getElementById('r-contractor').value = data.contractor || '';
+    document.getElementById('d-project').value = data.project_name || '';
+    document.getElementById('q-project').value = data.project_name || '';
+    document.getElementById('r-project').value = data.project_name || '';
+    document.getElementById('d-copies').value = data.copies || '3';
+    document.getElementById('q-copies1').value = data.copies || '3';
+    document.getElementById('q-copies2').value = data.copies || '3';
+    document.getElementById('r-copies').value = data.copies || '3';
+    document.getElementById('d-recipient').value = data.recipient || '';
+    document.getElementById('q-recipient').value = data.recipient || '';
+    document.getElementById('r-recipient').value = data.recipient || '';
+    document.getElementById('d-zip').value = data.postal_code || '';
+    var recAddr = data.shipping_address || (data.addresses && data.addresses.length > 0 ? data.addresses.slice(0, 1).pop() : '');
+    document.getElementById('q-rec-addr').value = recAddr;
+    document.getElementById('r-rec-addr').value = recAddr;
+    var addrSelect = document.getElementById('addrSelect');
+    addrSelect.innerHTML = '';
+    if (data.addresses && data.addresses.length > 0) {
+      for (var j = 0; j < data.addresses.length; j++) {
+        var opt = document.createElement('option');
+        opt.value = data.addresses[j];
+        opt.textContent = '地址 ' + (j + 1) + ': ' + data.addresses[j];
+        addrSelect.appendChild(opt);
+      }
+      applySelectedAddress();
+    } else {
+      var list = document.querySelectorAll('.addr-target');
+      for (var k = 0; k < list.length; k++) list[k].value = '';
+    }
+    document.getElementById('d-items').innerHTML = '';
+    document.getElementById('q-items').innerHTML = '';
+    document.getElementById('r-items').innerHTML = '';
+    var dCount = 0, qCount = 0, rCount = 0, parsedTotalQty = 0;
+    var itemsList = data.items || [];
+    lastExtractedItems = itemsList;
+    for (var m = 0; m < itemsList.length; m++) {
+      var item = itemsList[m];
+      var numQty = parseFloat(item.qty) || 0;
+      parsedTotalQty += numQty;
+      var bName = (item.brand || 'dulux').toLowerCase();
+      if (bName === 'dulux') {
+        addDuluxRow(item.product, item.color, item.qty + ' ' + (item.unit || '桶'));
+        dCount++;
+      } else if (bName === 'qingye') {
+        var line = (item.product + ' ' + item.color + '*' + item.qty + ' ' + (item.unit || '桶')).replace(/\s+/g, ' ');
+        addQingyeRow(line);
+        qCount++;
+      } else if (bName === 'rainbow') {
+        addRainbowRow(item.product, item.color, item.unit || '桶', item.qty);
+        rCount++;
+      }
+    }
+    if (dCount === 0) addDuluxRow();
+    if (qCount === 0) addQingyeRow();
+    if (rCount === 0) addRainbowRow();
+    document.getElementById('tab-dulux').textContent = '1. 得利 (' + dCount + '項)';
+    document.getElementById('tab-qingye').textContent = '2. 青葉 (' + qCount + '項)';
+    document.getElementById('tab-rainbow').textContent = '3. 虹牌 (' + rCount + '項)';
+    if (dCount > 0) switchBrand('dulux');
+    else if (qCount > 0) switchBrand('qingye');
+    else if (rCount > 0) switchBrand('rainbow');
+    var warnings = (data.verification && data.verification.warnings) ? data.verification.warnings : [];
+    var origQty = (data.verification && data.verification.original_total_qty) ? parseFloat(data.verification.original_total_qty) : parsedTotalQty;
+    if (origQty !== parsedTotalQty) {
+      warnings.unshift('數量提醒：原本資料共有 ' + origQty + ' 桶，但表格目前只有 ' + parsedTotalQty + ' 桶，請看一下有沒有漏掉！');
+    }
+    if (!data.project_name) warnings.push('資料裡沒有寫「工程名稱」，記得手動補上喔。');
+    if (!data.contractor) warnings.push('資料裡沒有寫「施工單位」，記得手動補上喔。');
+    reportBox.style.display = 'block';
+    if (warnings.length === 0) {
+      reportBox.className = 'check-box check-pass';
+      reportBox.textContent = '✅ 幫您核對完畢，完全相符！總共 ' + (dCount + qCount + rCount) + ' 項油漆（合計 ' + parsedTotalQty + ' 桶），文字、色號和數量都跟原本一樣。';
+    } else {
+      reportBox.className = 'check-box check-warn';
+      reportBox.textContent = '⚠️ 請幫忙看一眼以下小提醒：' + warnings.join(' ／ ');
+    }
+    status.style.color = '#137333';
+    status.textContent = '✅ 整理好囉！補上右邊黃色格子就能按列印了。';
+  } catch (err) {
+    status.style.color = 'red';
+    status.textContent = '❌ 發生小狀況：' + err.message;
+  } finally {
+    btn.disabled = false;
+  }
+}
+</script>
+</body>
+</html>
